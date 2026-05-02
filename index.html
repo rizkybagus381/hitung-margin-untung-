@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kalkulator Margin Kopi</title>
   
   <!-- Tailwind CSS -->
@@ -15,7 +15,7 @@
   <!-- Babel untuk JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 text-gray-800 antialiased">
   <div id="root"></div>
 
   <!-- Script Aplikasi (Type module & text/babel) -->
@@ -26,7 +26,7 @@
 
     const { useState, useEffect } = React;
 
-    // --- ICONS (Menggantikan lucide-react agar bisa jalan di 1 file HTML) ---
+    // --- ICONS ---
     const Coffee = ({ size = 24, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>;
     const Database = ({ size = 24, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>;
     const Loader2 = ({ size = 24, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>;
@@ -38,8 +38,7 @@
     const Edit2 = ({ size = 24, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>;
     const Trash2 = ({ size = 24, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>;
 
-
-    // --- FIREBASE CONFIGURATION ---
+    // --- FIREBASE CONFIGURATION (Konfigurasi Milikmu) ---
     const firebaseConfig = {
       apiKey: "AIzaSyBPzVaOwVo7Vny6Zd1Hfuyn21neRAH5GQs",
       authDomain: "absen-fa8b4.firebaseapp.com",
@@ -100,12 +99,13 @@
         return () => unsubscribe();
       }, []);
 
-      // 2. FETCH DATA
+      // 2. FETCH DATA (MENGGUNAKAN PUBLIC PATH AGAR SINKRON ANTAR PERANGKAT)
       useEffect(() => {
         if (!user) return;
 
-        const ingRef = collection(db, 'artifacts', currentAppId, 'users', user.uid, 'ingredients');
-        const menuRef = collection(db, 'artifacts', currentAppId, 'users', user.uid, 'menus');
+        // Path diubah ke public/data agar tersinkronisasi di semua device yang membuka link yang sama
+        const ingRef = collection(db, 'artifacts', currentAppId, 'public', 'data', 'ingredients');
+        const menuRef = collection(db, 'artifacts', currentAppId, 'public', 'data', 'menus');
 
         let loadedIng = false;
         let loadedMenu = false;
@@ -134,9 +134,9 @@
         };
       }, [user]);
 
-      // FUNGSI HELPER PATH
-      const getIngDoc = (id) => doc(db, 'artifacts', currentAppId, 'users', user.uid, 'ingredients', String(id));
-      const getMenuDoc = (id) => doc(db, 'artifacts', currentAppId, 'users', user.uid, 'menus', String(id));
+      // FUNGSI HELPER PATH (MENGGUNAKAN PUBLIC PATH)
+      const getIngDoc = (id) => doc(db, 'artifacts', currentAppId, 'public', 'data', 'ingredients', String(id));
+      const getMenuDoc = (id) => doc(db, 'artifacts', currentAppId, 'public', 'data', 'menus', String(id));
 
       // --- FUNGSI BAHAN BAKU ---
       const handleAddIngredient = async (e) => {
@@ -212,7 +212,9 @@
 
       const handleDeleteMenu = async (id) => {
         if (!user) return;
-        await deleteDoc(getMenuDoc(id));
+        if(window.confirm('Hapus menu ini?')) {
+          await deleteDoc(getMenuDoc(id));
+        }
       };
 
       const handleAddRecipeItem = async (menuId) => {
@@ -310,20 +312,20 @@
       }
 
       return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
+        <div className="min-h-screen bg-gray-50 p-3 md:p-8 font-sans text-gray-800 pb-20">
           <div className="max-w-6xl mx-auto">
             
-            {/* Header */}
-            <div className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-slate-800 flex items-center justify-center md:justify-start gap-2">
-                  <Coffee className="text-amber-700" size={32} />
-                  Kalkulator Margin Kedai Kopi
+            {/* Header - Mobile First Layout */}
+            <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-4 md:bg-transparent md:p-0 rounded-xl shadow-sm md:shadow-none">
+              <div className="text-center md:text-left">
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex flex-col md:flex-row items-center justify-center md:justify-start gap-2">
+                  <span className="bg-amber-100 p-2 rounded-full md:bg-transparent md:p-0"><Coffee className="text-amber-700" size={32} /></span>
+                  Kalkulator Kedai Kopi
                 </h1>
-                <p className="text-slate-500 mt-2 flex items-center justify-center md:justify-start gap-2">
-                  Hitung Total Modal, Laba, dan Margin % sesuai standar F&B. 
-                  <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full flex items-center gap-1 font-bold">
-                    <Database size={12} /> Tersimpan Otomatis
+                <p className="text-slate-500 mt-2 text-sm md:text-base flex flex-col md:flex-row items-center justify-center md:justify-start gap-2">
+                  Hitung Modal & Laba F&B. 
+                  <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1.5 rounded-full flex items-center gap-1 font-bold mt-2 md:mt-0">
+                    <Database size={12} /> Tersinkronisasi Online
                   </span>
                 </p>
               </div>
@@ -331,30 +333,30 @@
               {ingredients.length === 0 && menus.length === 0 && (
                  <button 
                    onClick={loadSampleData}
-                   className="bg-amber-100 text-amber-800 hover:bg-amber-200 px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2"
+                   className="w-full md:w-auto bg-amber-100 text-amber-800 hover:bg-amber-200 px-4 py-3 md:py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"
                  >
-                   <Database size={16} /> Muat Data Contoh PDF
+                   <Database size={16} /> Muat Data Contoh
                  </button>
               )}
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex gap-2 mb-6 border-b border-gray-200">
+            {/* Tab Navigation - Flex Full Width on Mobile */}
+            <div className="flex w-full mb-6 bg-gray-200 rounded-lg p-1">
               <button
                 onClick={() => setActiveTab('menu')}
-                className={`py-2 px-4 font-semibold rounded-t-lg transition-colors ${
-                  activeTab === 'menu' ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                className={`flex-1 py-3 px-2 text-sm md:text-base font-semibold rounded-md transition-colors ${
+                  activeTab === 'menu' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-300'
                 }`}
               >
-                Kalkulator Menu & Margin
+                Menu & Margin
               </button>
               <button
                 onClick={() => setActiveTab('ingredients')}
-                className={`py-2 px-4 font-semibold rounded-t-lg transition-colors ${
-                  activeTab === 'ingredients' ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                className={`flex-1 py-3 px-2 text-sm md:text-base font-semibold rounded-md transition-colors ${
+                  activeTab === 'ingredients' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-300'
                 }`}
               >
-                Database Bahan Baku
+                Bahan Baku
               </button>
             </div>
 
@@ -363,56 +365,58 @@
               <div className="space-y-6">
                 
                 {/* Tabel Kesimpulan (Sesuai PDF Halaman 9) */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-800">
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2 text-slate-800">
                     <Percent size={24} className="text-emerald-600" />
-                    Tabel Simulasi Margin & Untung
+                    Simulasi Margin
                   </h2>
-                  <table className="w-full min-w-[700px] text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-100 text-slate-700 text-sm">
-                        <th className="p-3 rounded-tl-lg">Nama Menu</th>
-                        <th className="p-3">Total Modal</th>
-                        <th className="p-3">Harga Jual</th>
-                        <th className="p-3">Untung (Laba)</th>
-                        <th className="p-3 rounded-tr-lg">Margin %</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {menus.map((menu) => {
-                        const totalModal = calculateMenuModal(menu.recipe);
-                        const untung = menu.sellPrice - totalModal;
-                        const margin = menu.sellPrice > 0 ? ((untung / menu.sellPrice) * 100).toFixed(0) : 0;
-                        
-                        return (
-                          <tr key={`summary-${menu.id}`} className="hover:bg-slate-50 transition-colors">
-                            <td className="p-3 font-semibold">{menu.name}</td>
-                            <td className="p-3 text-red-600 font-medium">{formatRupiah(totalModal)}</td>
-                            <td className="p-3 text-blue-600 font-medium">{formatRupiah(menu.sellPrice)}</td>
-                            <td className="p-3 text-emerald-600 font-bold">{formatRupiah(untung)}</td>
-                            <td className="p-3">
-                              <span className={`px-2 py-1 rounded text-sm font-bold ${margin >= 70 ? 'bg-emerald-100 text-emerald-700' : margin >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                                {margin}%
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {menus.length === 0 && (
-                        <tr>
-                          <td colSpan="5" className="p-4 text-center text-gray-500">Belum ada menu yang ditambahkan.</td>
+                  <div className="overflow-x-auto w-full pb-2">
+                    <table className="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal min-w-[600px] md:min-w-full">
+                      <thead>
+                        <tr className="bg-slate-100 text-slate-700 text-sm">
+                          <th className="p-3 rounded-tl-lg">Nama Menu</th>
+                          <th className="p-3">Total Modal</th>
+                          <th className="p-3">Harga Jual</th>
+                          <th className="p-3">Untung</th>
+                          <th className="p-3 rounded-tr-lg">Margin %</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {menus.map((menu) => {
+                          const totalModal = calculateMenuModal(menu.recipe);
+                          const untung = menu.sellPrice - totalModal;
+                          const margin = menu.sellPrice > 0 ? ((untung / menu.sellPrice) * 100).toFixed(0) : 0;
+                          
+                          return (
+                            <tr key={`summary-${menu.id}`} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3 font-semibold text-sm md:text-base">{menu.name}</td>
+                              <td className="p-3 text-red-600 font-medium text-sm md:text-base">{formatRupiah(totalModal)}</td>
+                              <td className="p-3 text-blue-600 font-medium text-sm md:text-base">{formatRupiah(menu.sellPrice)}</td>
+                              <td className="p-3 text-emerald-600 font-bold text-sm md:text-base">{formatRupiah(untung)}</td>
+                              <td className="p-3">
+                                <span className={`px-2 py-1 rounded text-xs md:text-sm font-bold ${margin >= 70 ? 'bg-emerald-100 text-emerald-700' : margin >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                                  {margin}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {menus.length === 0 && (
+                          <tr>
+                            <td colSpan="5" className="p-4 text-center text-gray-500 text-sm">Belum ada menu yang ditambahkan.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* List Menu untuk Edit Resep */}
-                <div className="flex justify-between items-center mb-4 mt-8">
-                  <h2 className="text-xl font-bold text-slate-800">Detail Resep & Harga Menu</h2>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 mt-8">
+                  <h2 className="text-lg md:text-xl font-bold text-slate-800">Detail Resep Menu</h2>
                   <button 
                     onClick={handleAddMenu}
-                    className="bg-slate-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-slate-700 transition"
+                    className="w-full sm:w-auto bg-slate-800 text-white px-4 py-3 md:py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-700 transition"
                   >
                     <Plus size={18} /> Tambah Menu Baru
                   </button>
@@ -426,66 +430,66 @@
                     return (
                       <div key={menu.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         {/* Menu Header */}
-                        <div className="bg-amber-50 p-4 border-b border-amber-100 flex justify-between items-start">
+                        <div className="bg-amber-50 p-4 border-b border-amber-100 flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0">
                           {isEditing ? (
                             <div className="w-full space-y-3">
                               <input 
                                 type="text" 
                                 value={menuForm.name}
                                 onChange={(e) => setMenuForm({...menuForm, name: e.target.value})}
-                                className="w-full p-2 border rounded focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-full p-3 md:p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-base"
                                 placeholder="Nama Menu"
                               />
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-gray-600">Harga Jual:</span>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">Harga Jual:</span>
                                 <input 
                                   type="number" 
                                   value={menuForm.sellPrice}
                                   onChange={(e) => setMenuForm({...menuForm, sellPrice: e.target.value})}
-                                  className="flex-1 p-2 border rounded focus:ring-2 focus:ring-amber-500 outline-none"
+                                  className="w-full sm:flex-1 p-3 md:p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-base"
                                   placeholder="Harga Jual"
                                 />
                               </div>
-                              <div className="flex justify-end gap-2">
-                                <button onClick={() => setEditingMenuId(null)} className="p-2 text-gray-500 hover:bg-gray-200 rounded">
-                                  <X size={18} />
+                              <div className="flex justify-end gap-2 pt-2">
+                                <button onClick={() => setEditingMenuId(null)} className="p-3 md:p-2 text-gray-500 hover:bg-gray-200 rounded-lg flex-1 md:flex-none flex justify-center">
+                                  <X size={20} />
                                 </button>
-                                <button onClick={() => handleSaveMenu(menu.id)} className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded flex items-center gap-1">
+                                <button onClick={() => handleSaveMenu(menu.id)} className="p-3 md:p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center justify-center gap-1 flex-1 md:flex-none font-medium">
                                   <Save size={18} /> Simpan
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <>
+                            <div className="w-full flex justify-between items-start">
                               <div>
                                 <h3 className="text-lg font-bold text-slate-800">{menu.name}</h3>
                                 <p className="text-sm text-blue-600 font-semibold mt-1">Jual: {formatRupiah(menu.sellPrice)}</p>
                                 <p className="text-sm text-red-600 font-semibold mt-1">Modal: {formatRupiah(totalModal)}</p>
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex gap-1 bg-white rounded-lg p-1 border shadow-sm">
                                 <button 
                                   onClick={() => {
                                     setEditingMenuId(menu.id);
                                     setMenuForm({ name: menu.name, sellPrice: menu.sellPrice });
                                   }} 
-                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
                                 >
                                   <Edit2 size={18} />
                                 </button>
                                 <button 
                                   onClick={() => handleDeleteMenu(menu.id)} 
-                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded transition"
                                 >
                                   <Trash2 size={18} />
                                 </button>
                               </div>
-                            </>
+                            </div>
                           )}
                         </div>
 
                         {/* Resep Builder */}
                         <div className="p-4">
-                          <h4 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Komposisi Bahan</h4>
+                          <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Komposisi Bahan</h4>
                           
                           <ul className="space-y-2 mb-4">
                             {(menu.recipe || []).map(item => {
@@ -494,7 +498,7 @@
                               const cost = (ingredient.price / ingredient.quantity) * item.amount;
                               
                               return (
-                                <li key={item.id} className="flex justify-between items-center text-sm p-2 bg-slate-50 rounded border border-slate-100">
+                                <li key={item.id} className="flex justify-between items-center text-sm p-3 md:p-2 bg-slate-50 rounded-lg border border-slate-100">
                                   <div className="flex flex-col">
                                     <span className="font-medium text-slate-700">{ingredient.name}</span>
                                     <span className="text-xs text-slate-500">{item.amount} {ingredient.unit}</span>
@@ -503,9 +507,9 @@
                                     <span className="font-semibold text-slate-700">{formatRupiah(cost)}</span>
                                     <button 
                                       onClick={() => handleDeleteRecipeItem(menu.id, item.id)}
-                                      className="text-red-400 hover:text-red-600"
+                                      className="text-red-400 hover:text-red-600 p-1"
                                     >
-                                      <X size={16} />
+                                      <X size={18} />
                                     </button>
                                   </div>
                                 </li>
@@ -516,11 +520,12 @@
                             )}
                           </ul>
 
-                          <div className="flex gap-2 items-end mt-4 border-t pt-4">
-                            <div className="flex-1">
-                              <label className="text-xs text-gray-500 block mb-1">Pilih Bahan</label>
+                          {/* Form Tambah Bahan ke Resep - Full width on Mobile */}
+                          <div className="flex flex-col sm:flex-row gap-3 items-end mt-4 border-t pt-4">
+                            <div className="w-full sm:flex-1">
+                              <label className="text-xs font-semibold text-gray-500 block mb-1">Pilih Bahan</label>
                               <select 
-                                className="w-full p-2 border rounded bg-white text-sm outline-none focus:border-amber-500"
+                                className="w-full p-3 md:p-2 border rounded-lg bg-white text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                                 value={recipeForm.ingredientId}
                                 onChange={(e) => setRecipeForm({...recipeForm, ingredientId: e.target.value})}
                               >
@@ -530,22 +535,24 @@
                                 ))}
                               </select>
                             </div>
-                            <div className="w-24">
-                              <label className="text-xs text-gray-500 block mb-1">Takaran</label>
-                              <input 
-                                type="number" 
-                                placeholder="0"
-                                className="w-full p-2 border rounded text-sm outline-none focus:border-amber-500"
-                                value={recipeForm.amount}
-                                onChange={(e) => setRecipeForm({...recipeForm, amount: e.target.value})}
-                              />
+                            <div className="w-full sm:w-28 flex gap-3 sm:block">
+                              <div className="flex-1">
+                                <label className="text-xs font-semibold text-gray-500 block mb-1">Takaran</label>
+                                <input 
+                                  type="number" 
+                                  placeholder="0"
+                                  className="w-full p-3 md:p-2 border rounded-lg text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                                  value={recipeForm.amount}
+                                  onChange={(e) => setRecipeForm({...recipeForm, amount: e.target.value})}
+                                />
+                              </div>
+                              <button 
+                                onClick={() => handleAddRecipeItem(menu.id)}
+                                className="bg-slate-800 text-white px-4 rounded-lg flex items-center justify-center hover:bg-slate-700 transition h-[42px] sm:h-[38px] self-end mt-1 sm:mt-0"
+                              >
+                                <Plus size={20} />
+                              </button>
                             </div>
-                            <button 
-                              onClick={() => handleAddRecipeItem(menu.id)}
-                              className="bg-slate-200 text-slate-700 p-2 rounded hover:bg-amber-500 hover:text-white transition"
-                            >
-                              <Plus size={20} />
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -558,50 +565,54 @@
             {/* TAB 2: BAHAN BAKU */}
             {activeTab === 'ingredients' && (
               <div className="space-y-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-800">
+                
+                {/* Form Tambah Bahan - Mobile Stacked */}
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2 text-slate-800">
                     <Package size={24} className="text-blue-600" />
                     Tambah Bahan Baku Baru
                   </h2>
-                  <form onSubmit={handleAddIngredient} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                  <form onSubmit={handleAddIngredient} className="flex flex-col md:grid md:grid-cols-5 gap-4 md:items-end">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Nama Bahan</label>
                       <input 
                         type="text" 
                         placeholder="Contoh: Susu UHT Diamond"
-                        className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full p-3 md:p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         value={newIngredient.name}
                         onChange={(e) => setNewIngredient({...newIngredient, name: e.target.value})}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Isi/Kemasan</label>
-                      <input 
-                        type="number" 
-                        placeholder="1000"
-                        className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={newIngredient.quantity}
-                        onChange={(e) => setNewIngredient({...newIngredient, quantity: e.target.value})}
-                      />
+                    <div className="flex gap-4 md:contents">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Isi/Total</label>
+                        <input 
+                          type="number" 
+                          placeholder="1000"
+                          className="w-full p-3 md:p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={newIngredient.quantity}
+                          onChange={(e) => setNewIngredient({...newIngredient, quantity: e.target.value})}
+                        />
+                      </div>
+                      <div className="w-28 md:w-auto">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Satuan</label>
+                        <select 
+                          className="w-full p-3 md:p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={newIngredient.unit}
+                          onChange={(e) => setNewIngredient({...newIngredient, unit: e.target.value})}
+                        >
+                          <option value="gr">gr</option>
+                          <option value="ml">ml</option>
+                          <option value="pcs">pcs</option>
+                        </select>
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Satuan</label>
-                      <select 
-                        className="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={newIngredient.unit}
-                        onChange={(e) => setNewIngredient({...newIngredient, unit: e.target.value})}
-                      >
-                        <option value="gr">Gram (gr)</option>
-                        <option value="ml">Mililiter (ml)</option>
-                        <option value="pcs">Pieces (pcs)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Harga Beli Total</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Harga Beli</label>
                       <input 
                         type="number" 
                         placeholder="20000"
-                        className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full p-3 md:p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         value={newIngredient.price}
                         onChange={(e) => setNewIngredient({...newIngredient, price: e.target.value})}
                       />
@@ -609,7 +620,7 @@
                     <div className="md:col-span-5 flex justify-end mt-2">
                       <button 
                         type="submit" 
-                        className="bg-blue-600 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition font-medium"
+                        className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 md:py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition font-medium"
                       >
                         <Plus size={18} /> Simpan Bahan
                       </button>
@@ -617,15 +628,16 @@
                   </form>
                 </div>
 
+                {/* Tabel Bahan Baku dengan Scroll di Mobile */}
                 <div className="bg-white p-0 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left border-collapse min-w-[700px] md:min-w-full">
                       <thead>
                         <tr className="bg-slate-100 text-slate-700 text-sm">
                           <th className="p-4">Nama Bahan</th>
-                          <th className="p-4">Ukuran Kemasan</th>
+                          <th className="p-4">Kemasan</th>
                           <th className="p-4">Harga Beli</th>
-                          <th className="p-4 bg-blue-50">HPP / Satuan Dasar</th>
+                          <th className="p-4 bg-blue-50">HPP / Satuan</th>
                           <th className="p-4 text-center">Aksi</th>
                         </tr>
                       </thead>
@@ -637,15 +649,15 @@
                           if (isEditing) {
                             return (
                               <tr key={`edit-${ing.id}`} className="bg-blue-50 text-sm">
-                                <td className="p-4">
+                                <td className="p-3">
                                   <input
                                     type="text"
-                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full min-w-[120px] p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={editIngredientForm.name}
                                     onChange={(e) => setEditIngredientForm({...editIngredientForm, name: e.target.value})}
                                   />
                                 </td>
-                                <td className="p-4 flex items-center gap-2">
+                                <td className="p-3 flex items-center gap-1 min-w-[140px]">
                                   <input
                                     type="number"
                                     className="w-16 p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -662,7 +674,7 @@
                                     <option value="pcs">pcs</option>
                                   </select>
                                 </td>
-                                <td className="p-4">
+                                <td className="p-3 min-w-[120px]">
                                   <input
                                     type="number"
                                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -670,22 +682,20 @@
                                     onChange={(e) => setEditIngredientForm({...editIngredientForm, price: e.target.value})}
                                   />
                                 </td>
-                                <td className="p-4 text-gray-400 text-xs italic">
+                                <td className="p-3 text-gray-400 text-xs italic">
                                   HPP Otomatis...
                                 </td>
-                                <td className="p-4 text-center">
-                                  <div className="flex items-center justify-center gap-2">
+                                <td className="p-3 text-center">
+                                  <div className="flex items-center justify-center gap-1">
                                     <button
                                       onClick={() => saveEditIngredient(ing.id)}
-                                      className="text-white bg-emerald-500 hover:bg-emerald-600 p-1.5 rounded transition"
-                                      title="Simpan"
+                                      className="text-white bg-emerald-500 hover:bg-emerald-600 p-2 rounded transition"
                                     >
                                       <Save size={18} />
                                     </button>
                                     <button
                                       onClick={cancelEditIngredient}
-                                      className="text-white bg-gray-400 hover:bg-gray-500 p-1.5 rounded transition"
-                                      title="Batal"
+                                      className="text-white bg-gray-400 hover:bg-gray-500 p-2 rounded transition"
                                     >
                                       <X size={18} />
                                     </button>
@@ -697,25 +707,23 @@
 
                           return (
                             <tr key={ing.id} className="hover:bg-slate-50 transition-colors text-sm">
-                              <td className="p-4 font-medium text-slate-800">{ing.name}</td>
-                              <td className="p-4">{ing.quantity} {ing.unit}</td>
-                              <td className="p-4">{formatRupiah(ing.price)}</td>
-                              <td className="p-4 bg-blue-50/30 font-semibold text-blue-700">
+                              <td className="p-4 font-medium text-slate-800 whitespace-nowrap">{ing.name}</td>
+                              <td className="p-4 whitespace-nowrap">{ing.quantity} {ing.unit}</td>
+                              <td className="p-4 whitespace-nowrap">{formatRupiah(ing.price)}</td>
+                              <td className="p-4 bg-blue-50/30 font-semibold text-blue-700 whitespace-nowrap">
                                 {formatRupiah(costPerUnit)} / {ing.unit}
                               </td>
                               <td className="p-4 text-center">
                                 <div className="flex items-center justify-center gap-2">
                                   <button
                                     onClick={() => startEditIngredient(ing)}
-                                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded transition"
-                                    title="Edit"
+                                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition border border-transparent hover:border-blue-200"
                                   >
                                     <Edit2 size={18} />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteIngredient(ing.id)}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition"
-                                    title="Hapus"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition border border-transparent hover:border-red-200"
                                   >
                                     <Trash2 size={18} />
                                   </button>
@@ -726,8 +734,8 @@
                         })}
                         {ingredients.length === 0 && (
                           <tr>
-                            <td colSpan="5" className="p-8 text-center text-gray-500">
-                              Belum ada bahan baku. Silakan tambahkan di atas atau gunakan "Muat Data Contoh".
+                            <td colSpan="5" className="p-8 text-center text-gray-500 text-sm">
+                              Belum ada bahan baku. Silakan tambahkan di atas.
                             </td>
                           </tr>
                         )}
